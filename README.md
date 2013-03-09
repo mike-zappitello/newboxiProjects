@@ -5,11 +5,11 @@ collaborative project to create interesting inforgraphs for nba stats
 
 a few ideas for projects that we can try to work out:
 
---stats for who pulls defenses away and creates open shot for players
+* stats for who pulls defenses away and creates open shot for players
 >look for pass, pass, shoot and what that shooting percentage is
 >go by player, team, unit?
 
---most played units on playoff teams
+* most played units on playoff teams
 >look at substitutions and get stats on what units are on the floor the most for any team
 >find the top two units for each of the 16 playoff teams and work on their stats
 >get this as an infographic in time for the first round of the playoffs?
