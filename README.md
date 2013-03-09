@@ -3,7 +3,7 @@ nbaInfoStats
 
 collaborative project to create interesting inforgraphs for nba stats
 
-a few ideas for projects that we can try to work out:
+<b>a few ideas for projects that we can try to work out</b>
 
 -- stats for who pulls defenses away and creates open shot for players
 * look for pass, pass, shoot and what that shooting percentage is
@@ -32,7 +32,7 @@ a few ideas for projects that we can try to work out:
 * order them from least followers to most and find some interesting people
 * a lot of interesting data do be groomed from twitter.  this is just idea 1
 
-other housekeeping thoughts
+<b>other housekeeping thoughts</b>
 
 * i'm goign to do a directory for each project
 * each folder will have a folder for the code, a folder for data, and a folder for images?
