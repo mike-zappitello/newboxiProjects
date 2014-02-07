@@ -1,8 +1,8 @@
 import urllib2
 from HTMLParser import HTMLParser
 import MySQLdb as mdb
-import sys
 import db
+import sys
 
 #create subclass and override the handler methods?
 class rosterHTMLParser(HTMLParser):
