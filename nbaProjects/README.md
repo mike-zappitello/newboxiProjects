@@ -38,3 +38,14 @@ collaborative project to create interesting inforgraphs for nba stats
 * each folder will have a folder for the code, a folder for data, and a folder for images?
 * you can update images in git as well
 
+<b>data base structure to impose</b>
+
+* a database of all players and unique ids
+  * id | name *
+* a database of all player lineups and unique ids
+  * id | player 1 id | player 2 id | player 3 id | player 4 id | player 5 id *
+* a database of all possessions
+  * id | previous possession id | offensive lineup id | defensive lineup id | score after possession | durration of possession | last event id *
+* a database of all events
+  * id | previous even id | possession id | event category | player involved | shot type *
+* a database of all teams and their games
