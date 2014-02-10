@@ -32,20 +32,14 @@ collaborative project to create interesting inforgraphs for nba stats
 * order them from least followers to most and find some interesting people
 * a lot of interesting data do be groomed from twitter.  this is just idea 1
 
-<b>other housekeeping thoughts</b>
+<b> the stas directory </b>
+-- submodule dataFiles found on github from [@ddw17](http://www.twitter.com/ddw17).
+* creates json manifest of teams and season schedules for each team
+* i've added script that pulls play by play xml data from [EventFlow](http://www.cs.umd.edu/hcil/eventflow/NBA/nbaData.shtml)
+* i think i'm going to just use this submodule as a way to collect and store various data sets
 
-* i'm goign to do a directory for each project
-* each folder will have a folder for the code, a folder for data, and a folder for images?
-* you can update images in git as well
+-- TODO in the rest of the stats directory
+* scripts that parse data sets and turn them into numpy arrays
+* scripts that analize numpy arrays / prepare it for analysis in python interpretur using pandas
+* scripts for converting numpy arrays into plots using matplotlib
 
-<b>data base structure to impose</b>
-
-* a database of all players and unique ids
-  * id | name *
-* a database of all player lineups and unique ids
-  * id | player 1 id | player 2 id | player 3 id | player 4 id | player 5 id *
-* a database of all possessions
-  * id | previous possession id | offensive lineup id | defensive lineup id | score after possession | durration of possession | last event id *
-* a database of all events
-  * id | previous even id | possession id | event category | player involved | shot type *
-* a database of all teams and their games

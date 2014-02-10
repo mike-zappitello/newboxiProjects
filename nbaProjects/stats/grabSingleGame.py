@@ -1,13 +1,4 @@
-import urllib2
 import xml.etree.ElementTree as ET
-
-# take in a players name and team and make sure we have an entry in the players table
-# return the index of the player
-def playerID(playerName):
-
-# take in a lineup and make sure we have an entry in the lineups table
-# retun the index of that lineup
-def lineupID(lineup):
 
 #log all of the data from the xml file into the db
 def logGame(file):
