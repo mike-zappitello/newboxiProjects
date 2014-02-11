@@ -37,6 +37,7 @@ collaborative project to create interesting inforgraphs for nba stats
 * creates json manifest of teams and season schedules for each team
 * i've added script that pulls play by play xml data from [EventFlow](http://www.cs.umd.edu/hcil/eventflow/NBA/nbaData.shtml)
 * i think i'm going to just use this submodule as a way to collect and store various data sets
+* the next data set i need to generate is a json array of all of the players on a team.  what fun!
 
 -- TODO in the rest of the stats directory
 * scripts that parse data sets and turn them into numpy arrays
