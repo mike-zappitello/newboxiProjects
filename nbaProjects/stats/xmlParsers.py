@@ -4,10 +4,12 @@ data sets that fit the analysis that i'm trying to run
 '''
 
 import xml.etree.ElementTree as ET
+import xml.parsers.expat as expat
 from os import listdir
 from os.path import isfile, join, exists
 import re
 import json
+import numpy as np
 
 k_pbpDir = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/playByPlay/')
 k_teamsFile = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/json/teams.json')
@@ -47,33 +49,47 @@ def nickToCity(nickname):
 # accepts a file to parse
 # accepts bins to add them to?
 # returns nothing?
-def playerPointsHistParser(file):
-  file = (k_pbpDir + '76ers-Bobcats-011514.xml')
-  gameTree = ET.parse(file)
-  game = gameTree.getroot()
+def playerPointsHistParser(file, diffs):
+  try:
+    gameTree = ET.parse(k_pbpDir + file)
+    game = gameTree.getroot()
 
-  homeTeam = game.find('home-team').text
-  homeCity = nickToCity(homeTeam)
-  awayTeam = game.find('away-team').text
-  awayCity = nickToCity(awayTeam)
+    homeTeam = game.find('home-team').text
+    homeCity = nickToCity(homeTeam)
+    awayTeam = game.find('away-team').text
+    awayCity = nickToCity(awayTeam)
 
-  for period in game.iter('period'):
-    for possession in period.iter('possession'):
-      team = possession.find('team').text
-      for event in possession.iter('event'):
-        category = event.find('category')
-        if category.text == 'Made Shot':
-          # time = event.find('gametime')
-          shotType = int(event.find('shottype').text)
-          player = event.find('player').text
-          score = event.find('score').text
-          if team == homeCity:
-            scoreDiff = calculateScoreDiff(score)
-          else:
-            scoreDiff = -calculateScoreDiff(score)
+    if homeTeam != 'Thunder' and awayTeam != 'Thunder':
+      return
 
-          print "{0} scored {1} points at diff {2}".format(player, shotType, scoreDiff)
+    for period in game.iter('period'):
+      for possession in period.iter('possession'):
+        team = possession.find('team').text
+        for event in possession.iter('event'):
+          category = event.find('category').text
+          if category == 'Made Shot':
+            # time = event.find('gametime')
+            shotType = int(event.find('shottype').text)
+            player = event.find('player').text
+            score = event.find('score').text
+            if team == homeCity:
+              scoreDiff = calculateScoreDiff(score)
+            else:
+              scoreDiff = -calculateScoreDiff(score)
+            if player == 'Kevin Durant':
+              diffs.append([scoreDiff, shotType])
+              # print "{0} scored {1} points at diff {2}".format(player, shotType, scoreDiff)
+
+  except IOError as e:
+    print "I/O error({0}): {1}".format(e.errno, e.strerror)
+  except ET.ParseError as e:
+    errorStr = expat.ErrorString(e.code)
+    print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
 games = getPBPFiles()
+diffs = []
 for game in games:
-  playerPointsHistParser(game)
+  playerPointsHistParser(game, diffs)
+
+diffs = np.array(diffs)
+print diffs
