@@ -1,0 +1,13 @@
+# ignore swap files created by vim
+*.swp
+
+# ignore data files
+*.xml
+*.json
+*.csv
+
+# ignore hidden files
+.*
+
+# ignore data directory
+nbaProjects/data/
