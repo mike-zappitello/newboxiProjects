@@ -9,21 +9,20 @@ from os.path import isfile, join, exists
 import json
 import re
 import urllib2
+import dataDirs as dataDir
 
-k_scheduleDir = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/json/')
-k_pbpDir = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/playByPlay/')
 k_baseUrl = ('http://www.cs.umd.edu/hcil/eventflow/NBA/gameFiles/')
 
-# returns all of the schecdule files is k_scheduleDir
+# returns all of the schecdule files is dataDir.k_scheduleDir
 def getScheduleFiles():
-  schedulefiles = [ f for f in listdir(k_scheduleDir) if isfile(join(k_scheduleDir ,f)) ]
+  schedulefiles = [ f for f in listdir(dataDir.k_scheduleDir) if isfile(join(k_scheduleDir ,f)) ]
   return schedulefiles
 
-# takes in a base name for a json dict in k_scheduleDir
+# takes in a base name for a json dict in dataDir.k_scheduleDir
 # takes the a json dict of team data
 # returns a dict of all baseUrls for xml data
 def getGames(baseName, teamData):
-  fileToOpen = (k_scheduleDir + baseName)
+  fileToOpen = (dataDir.k_scheduleDir + baseName)
   f = open(fileToOpen)
   data = json.load(f)
   f.close()
@@ -58,7 +57,7 @@ def getGames(baseName, teamData):
 def getAllGames():
   scheduleFiles = getScheduleFiles()
 
-  teamsFileString = (k_scheduleDir + 'teams.json')
+  teamsFileString = (dataDir.k_scheduleDir + 'teams.json')
   teamsFile = open(teamsFileString)
   teamData = json.load(teamsFile)
   teamsFile.close()
@@ -83,7 +82,7 @@ def saveGames():
       gamePage = urllib2.urlopen(gameUrl)
       gameData = gamePage.read()
       gamePage.close()
-      gameFileString = k_pbpDir + gameString
+      gameFileString = dataDir.k_pbpDir + gameString
       gameFile = open(gameFileString, 'w+')
       gameFile.write(gameData)
       gameFile.close()

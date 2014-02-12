@@ -6,8 +6,8 @@
 *.json
 *.csv
 
-# ignore hidden files
-.*
+# ignore some other extentions
+*.pyc
 
 # ignore data directory
 nbaProjects/data/

@@ -10,13 +10,13 @@ from os.path import isfile, join, exists
 import re
 import json
 import numpy as np
+import dataDirs as dataDir
 
-k_pbpDir = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/playByPlay/')
-k_teamsFile = ('/usr/home/mzappitello/infographs/nbaProjects/stats/dataFiles/2013-2014-nba-schedule/data/json/teams.json')
+k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 
 
 def getPBPFiles():
-  schedulefiles = [ f for f in listdir(k_pbpDir) if isfile(join(k_pbpDir ,f)) ]
+  schedulefiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
   return schedulefiles
 
 # accepts a score as a string <int>-<int>
@@ -51,7 +51,7 @@ def nickToCity(nickname):
 # returns nothing?
 def playerPointsHistParser(file, diffs):
   try:
-    gameTree = ET.parse(k_pbpDir + file)
+    gameTree = ET.parse(dataDir.k_pbpDir + file)
     game = gameTree.getroot()
 
     homeTeam = game.find('home-team').text
