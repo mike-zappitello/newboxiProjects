@@ -1,6 +1,6 @@
 import MySQLdb as mdb
 import twitter
-from pprint import pprint
+import pprint
 
 api=twitter.Api(consumer_key='PzuOk2YPzqZ9nwV9LmmIw',
 	consumer_secret='1mCyBwjm8CVR4mRJCRYrvV0zDgLULm2sXyU0k20xV34',

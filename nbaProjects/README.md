@@ -32,15 +32,37 @@ collaborative project to create interesting inforgraphs for nba stats
 * order them from least followers to most and find some interesting people
 * a lot of interesting data do be groomed from twitter.  this is just idea 1
 
-<b> the stas directory </b>
--- submodule dataFiles found on github from [@ddw17](http://www.twitter.com/ddw17).
+<b> structure of directory </b>
+-- data directory
+** holds all data files
+* teams, players, schedules at the moment.
+* only one version of each.  should look into ways to keep it current
+** holds .py that holds the absolute path to each dir in data dir
+
+-- scrapers directory
+** one for teams
+* found on github from [@ddw17](http://www.twitter.com/ddw17).
 * creates json manifest of teams and season schedules for each team
-* i've added script that pulls play by play xml data from [EventFlow](http://www.cs.umd.edu/hcil/eventflow/NBA/nbaData.shtml)
-* i think i'm going to just use this submodule as a way to collect and store various data sets
-* the next data set i need to generate is a json array of all of the players on a team.  what fun!
+* I left his lisence and read me in tact with the scraper.
+* I probably broke it in moving it.  Its a todo to fix.
+** one for play by play
+* pulls play by play xml data from [EventFlow](http://www.cs.umd.edu/hcil/eventflow/NBA/nbaData.shtml)
+* needs work that will allow it to auto update games as they are played
+** one for players
+* i inherited this one from old work.
+* i need to go through it and find out how good/bad it is
+** on for twitter
+* i planned on doing an analysis of who's following who on twitter
+* this stuff is from that and it didn't make sense to delete it
+* i have no idea how good it is
+
+-- the rest
+** i'm not sure at this point
+* i think the ideal thing to have is a set of parsers for each data type
+* each parser would massage the data into the right form
+* then i could just make things from there i suppose
 
 -- TODO in the rest of the stats directory
-* scripts that parse data sets and turn them into numpy arrays
 * scripts that analize numpy arrays / prepare it for analysis in python interpretur using pandas
 * scripts for converting numpy arrays into plots using matplotlib
 
