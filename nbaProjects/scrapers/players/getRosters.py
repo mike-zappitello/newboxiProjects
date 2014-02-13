@@ -1,10 +1,12 @@
 import urllib2
 from HTMLParser import HTMLParser
-import MySQLdb as mdb
-import db
-import sys
+import dataDirs as dataDir
+import json
 
-#create subclass and override the handler methods?
+# url containing roster data
+k_baseUrl = 'http://www.eskimo.com/~pbender/rosters.html'
+
+# create subclass and override the handler methods?
 class rosterHTMLParser(HTMLParser):
 	def print_pre_contents(self, html):
 		self.tag_stack = ["dummy"]
@@ -23,47 +25,101 @@ class rosterHTMLParser(HTMLParser):
 		if len(self.tag_stack) > 0 and  self.tag_stack[-1] == 'pre':
 			self.roster_stack.append(data)
 
-url = 'http://www.eskimo.com/~pbender/rosters.html'
+# get the html from the roster url and parse it out
+def parseRoster():
+  roster_page = urllib2.urlopen(k_baseUrl)
+  roster_page_html_shitty = roster_page.read()
+  roster_page.close()
+  roster_page_html = roster_page_html_shitty.replace("#", "")
 
-roster_page = urllib2.urlopen(url)
-roster_page_html_shitty = roster_page.read()
-roster_page.close()
-roster_page_html = roster_page_html_shitty.replace("#", "")
+  theHTMLparser = rosterHTMLParser()
+  return theHTMLparser.print_pre_contents(roster_page_html)
 
-theHTMLparser = rosterHTMLParser()
-roster_list = theHTMLparser.print_pre_contents(roster_page_html)
+def teamsData():
+  teamsFileString = (dataDir.k_teamsDir + 'teams.json')
+  teamsFile = open(teamsFileString)
+  teamData = json.load(teamsFile)
+  teamsFile.close()
+  return teamData['teams']
 
-players = [[],[]]
+def combineData(htmlData, jsonData):
+  leagueRoster = []
+  # for each team
+  for hTeam in htmlData:
+    print hTeam
+    # split the html team data by line and look at each line
+    teamArray = hTeam.split('\n')
+    for playerLine in teamArray:
+      # for this site, if a line conatains '...' its a platyer
+      if '...' in playerLine:
+        # split each line by a ' '
+        # 0 - player number
+        # 1 - first name
+        # 2 - last name
+        # 3 - "...." place holder
+        # 4 - position
+        # 5 - height
+        # 6 - weight
+        # 7 - birthday
+        # 8 - college
+        # 9 - experience
+        info = playerLine.split()
+        print info
+        if info[0] == "3?*Shawne":
+          player = {
+            'firstName' : "Shawne",
+            'lastName' : info[1],
+            'number' : "3",
+            'height' : info[4],
+            'weight' : info[5],
+            'position' : info[3],
+            'experience' : info[8],
+            'born' : info[5],
+            'college' : info[7]
+          }
+        elif info[1] == "Mirza":
+          player = {
+            'firstName' : info[1],
+            'lastName' : info[2],
+            'number' : info[0],
+            'height' : info[5],
+            'weight' : info[6],
+            'position' : info[4],
+            'experience' : "1",
+            'born' : info[6],
+            'college' : info[8]
+          }
+        elif info[1] == "Nene":
+          player = {
+            'firstName' : info[1],
+            'lastName' : "",
+            'number' : info[0],
+            'height' : info[4],
+            'weight' : info[5],
+            'position' : info[3],
+            'experience' : info[7],
+            'born' : info[5],
+            'college' : info[7]
+          }
+        else:
+          player = {
+            'firstName' : info[1],
+            'lastName' : info[2],
+            'number' : info[0],
+            'height' : info[5],
+            'weight' : info[6],
+            'position' : info[4],
+            'experience' : info[9],
+            'born' : info[6],
+            'college' : info[8]
+          }
+        leagueRoster.append(player)
+  return leagueRoster
 
-for team in roster_list:
-	team_array = team.split('\n')
-	for player_line in team_array:
-		if '...' in player_line:
-			info = player_line.split(' ')
-			#they have a one digit jersey number
-			if len(info[0])==0:
-				if ".." not in info[4]:
-					players.append([info[4],info[3]])
-				else:
-					players.append([info[3],info[2]])
-			#they have a two digit jersey number
-			else:
-				if '..' not in info[3]:
-					players.append([info[3],info[2]])
-				else:
-					players.append([info[2],info[1]])
+def saveData(dataAsList):
+  jsonRoster = json.dumps(dataAsList, sort_keys=True, indent=2)
+  jsonFile = open(dataDir.k_rosterDir + 'leagueRoster.json', 'w')
+  jsonFile.write(jsonRoster)
+  jsonFile.close()
 
-con = db.connect_to_mysql()
-
-if con:
-	try:
-		cur = con.cursor()
-		for baller in players:
-			if len(baller)>1:	
-				cur.execute('INSERT INTO playerRoster(last_name,first_name) VALUES("%s","%s")' % (baller[0],baller[1]))
-				print cur.fetchall()
-
-	except mdb.Error, e:
-		print "Error %d: %s" % (e.args[0], e.args[1])
-
-	con.close()
+saveData(combineData(parseRoster(), teamsData()))

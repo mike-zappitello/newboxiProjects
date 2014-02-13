@@ -57,7 +57,7 @@ def getGames(baseName, teamData):
 def getAllGames():
   scheduleFiles = getScheduleFiles()
 
-  teamsFileString = (dataDir.k_scheduleDir + 'teams.json')
+  teamsFileString = (dataDir.k_teamsDir + 'teams.json')
   teamsFile = open(teamsFileString)
   teamData = json.load(teamsFile)
   teamsFile.close()

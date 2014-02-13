@@ -78,7 +78,6 @@ def playerPointsHistParser(file, diffs):
               scoreDiff = -calculateScoreDiff(score)
             if player == 'Kevin Durant':
               diffs.append([scoreDiff, shotType])
-              # print "{0} scored {1} points at diff {2}".format(player, shotType, scoreDiff)
 
   except IOError as e:
     print "I/O error({0}): {1}".format(e.errno, e.strerror)
@@ -91,5 +90,8 @@ diffs = []
 for game in games:
   playerPointsHistParser(game, diffs)
 
+# diffs is a 2xn array of the score diff and the points made in each row
 diffs = np.array(diffs)
 print diffs
+# print the total number of points
+print diffs.sum(axis=0)[1]
