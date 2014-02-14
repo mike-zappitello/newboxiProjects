@@ -14,6 +14,7 @@ import dataDirs as dataDir
 
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
+k_bins = np.arange(-30, 31, 1)
 
 
 def getPBPFiles():
@@ -117,17 +118,13 @@ def numpyPlayerDiffs(playerDiffs):
 def arrayToHist(playerDiffs):
   histData = []
   for playerDiff in playerDiffs:
-    print playerDiff[0]
     if playerDiff[1].size != 0:
       # diffs are the first column in the array
       diffs = playerDiff[1][ : , 0]
       # weights are the shot types, in the second column
       weights = playerDiff[1][ : , 1]
-      bins = np.arange(-30, 31, 1)
-      print diffs
-      print weights
-      playerHistData = np.histogram(diffs, weights = weights, bins = bins)
-      print playerHistData
+      playerHistData, edges = np.histogram(diffs, weights = weights, bins = k_bins)
+      histData.append([playerDiff[0], playerHistData)
 
 games = getPBPFiles()
 playerDiffs = setupPlayerDiffs()
