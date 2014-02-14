@@ -111,12 +111,30 @@ def numpyPlayerDiffs(playerDiffs):
 
   return newPlayerDiffs
 
+# create histogram data for each player
+# takes playerDiffs with numpy arrays
+# returns list of histogram data
+def arrayToHist(playerDiffs):
+  histData = []
+  for playerDiff in playerDiffs:
+    print playerDiff[0]
+    if playerDiff[1].size != 0:
+      # diffs are the first column in the array
+      diffs = playerDiff[1][ : , 0]
+      # weights are the shot types, in the second column
+      weights = playerDiff[1][ : , 1]
+      bins = np.arange(-30, 31, 1)
+      print diffs
+      print weights
+      playerHistData = np.histogram(diffs, weights = weights, bins = bins)
+      print playerHistData
+
 games = getPBPFiles()
 playerDiffs = setupPlayerDiffs()
 for game in games:
   playerPointsHistParser(game, playerDiffs)
 
-print numpyPlayerDiffs(playerDiffs)
+arrayToHist(numpyPlayerDiffs(playerDiffs))
 
 # print the total number of points
 # print diffs.sum(axis=0)[1]
