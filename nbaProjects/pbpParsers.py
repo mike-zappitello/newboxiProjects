@@ -13,6 +13,7 @@ import numpy as np
 import dataDirs as dataDir
 
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
+k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
 
 
 def getPBPFiles():
@@ -49,7 +50,7 @@ def nickToCity(nickname):
 # accepts a file to parse
 # accepts bins to add them to?
 # returns nothing?
-def playerPointsHistParser(file, diffs):
+def playerPointsHistParser(file, playerDiffs):
   try:
     gameTree = ET.parse(dataDir.k_pbpDir + file)
     game = gameTree.getroot()
@@ -58,9 +59,6 @@ def playerPointsHistParser(file, diffs):
     homeCity = nickToCity(homeTeam)
     awayTeam = game.find('away-team').text
     awayCity = nickToCity(awayTeam)
-
-    if homeTeam != 'Thunder' and awayTeam != 'Thunder':
-      return
 
     for period in game.iter('period'):
       for possession in period.iter('possession'):
@@ -76,8 +74,9 @@ def playerPointsHistParser(file, diffs):
               scoreDiff = calculateScoreDiff(score)
             else:
               scoreDiff = -calculateScoreDiff(score)
-            if player == 'Kevin Durant':
-              diffs.append([scoreDiff, shotType])
+            for diffs in playerDiffs:
+              if diffs[0] == player:
+                diffs[1].append([scoreDiff, shotType])
 
   except IOError as e:
     print "I/O error({0}): {1}".format(e.errno, e.strerror)
@@ -85,13 +84,39 @@ def playerPointsHistParser(file, diffs):
     errorStr = expat.ErrorString(e.code)
     print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
-games = getPBPFiles()
-diffs = []
-for game in games:
-  playerPointsHistParser(game, diffs)
+# setup a list that has each player in it.
+# first element is player name (full)
+# second element is a blank list
+def setupPlayerDiffs():
+  playersFileString = (k_playersFile)
+  playersFile = open(playersFileString)
+  playerData = json.load(playersFile)
+  playersFile.close()
 
-# diffs is a 2xn array of the score diff and the points made in each row
-diffs = np.array(diffs)
-print diffs
+  playerDiffs = []
+  players = playerData['players']
+  for player in players:
+    playerName = player['firstName'] + ' ' + player['lastName']
+    playerDiffs.append([playerName, []])
+
+  return playerDiffs
+
+# change playerDiffs to numpy arrays so we can fuck with them
+# takes playerDiffs with python lists
+# returns playerDiffs with numpy arrays
+def numpyPlayerDiffs(playerDiffs):
+  newPlayerDiffs = []
+  for playerDiff in playerDiffs:
+    newPlayerDiffs.append([playerDiff[0], np.array(playerDiff[1])])
+
+  return newPlayerDiffs
+
+games = getPBPFiles()
+playerDiffs = setupPlayerDiffs()
+for game in games:
+  playerPointsHistParser(game, playerDiffs)
+
+print numpyPlayerDiffs(playerDiffs)
+
 # print the total number of points
-print diffs.sum(axis=0)[1]
+# print diffs.sum(axis=0)[1]
