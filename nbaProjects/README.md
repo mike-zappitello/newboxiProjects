@@ -50,7 +50,8 @@ collaborative project to create interesting inforgraphs for nba stats
 * needs work that will allow it to auto update games as they are played
 ** one for players
 * i inherited this one from old work.
-* i need to go through it and find out how good/bad it is
+* modified it to store data into league wide json manifest
+* pulls data from [eskimo](http://www.eskimo.com/~pbender/rosters.html)
 ** on for twitter
 * i planned on doing an analysis of who's following who on twitter
 * this stuff is from that and it didn't make sense to delete it
