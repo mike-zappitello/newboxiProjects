@@ -11,6 +11,8 @@ import re
 import json
 import numpy as np
 import dataDirs as dataDir
+# import matplotlib.pyplot as plt
+# import matplotlib.mlab as mlab
 
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
@@ -30,6 +32,15 @@ def calculateScoreDiff(scoreString):
   diff = home - away
   return diff
 
+# accepts a time string and a period
+# returns the total time elapsed in the game
+def calculateTotalTime(timeString, period):
+  periodTime = re.match(r"00:(?P<minutes>\d{1,3}):(?P<seconds>\d{1,3})\.(?P<microseconds>\d{1,3})", timeString)
+  minutes = int(periodTime.group('minutes'))
+  seconds = int(periodTime.group('seconds'))
+  return (period * 12 + minutes) * 60 + seconds
+
+
 # accepts a teams nickname
 # returns the teams city in all capitals
 # TODO - find a solution for Los Angeles
@@ -46,38 +57,69 @@ def nickToCity(nickname):
 
   return city.upper()
 
-# parse all of the data from a single game into bins
-# each bin is based on when the player made shots wrt score differential
-# accepts a file to parse
-# accepts bins to add them to?
-# returns nothing?
-def playerPointsHistParser(file, playerDiffs):
+# parse all of the shot data from a single game into an array
+# accepts a file to parse and the playerDataArray to fill out
+# retruns the filled out playerDataArray
+def playerShotsParser(file, playerDataArray):
   try:
     gameTree = ET.parse(dataDir.k_pbpDir + file)
     game = gameTree.getroot()
 
-    homeTeam = game.find('home-team').text
+    homeTeam = game.findtext('home-team')
     homeCity = nickToCity(homeTeam)
-    awayTeam = game.find('away-team').text
+    awayTeam = game.findtext('away-team')
     awayCity = nickToCity(awayTeam)
 
+    print "parsing {0} at {1}".format(awayCity, homeCity)
+
+    periodCount = int(0)
+    # parse through each period
     for period in game.iter('period'):
+      periodCount += 1
+
+      # parse through each possesion
       for possession in period.iter('possession'):
-        team = possession.find('team').text
+        team = possession.findtext('team')
+
+        # parse through each event
         for event in possession.iter('event'):
-          category = event.find('category').text
+          category = event.findtext('category')
+
+          # if we have a 'made shot' then log it
           if category == 'Made Shot':
-            # time = event.find('gametime')
-            shotType = int(event.find('shottype').text)
-            player = event.find('player').text
-            score = event.find('score').text
+            # get the time, shot type, player, and score diff
+            time = event.findtext('time')
+            totalTime = calculateTotalTime(time, periodCount)
+            shotType = int(event.findtext('shottype'))
+            player = event.findtext('player')
+            score = event.findtext('score')
             if team == homeCity:
               scoreDiff = calculateScoreDiff(score)
             else:
               scoreDiff = -calculateScoreDiff(score)
-            for diffs in playerDiffs:
-              if diffs[0] == player:
-                diffs[1].append([scoreDiff, shotType])
+
+            # rotate through the players and add data to the one who shot
+            for playerData in playerDataArray:
+              if playerData[0] == player:
+                playerData[1].append([periodCount, totalTime, shotType, shotType, scoreDiff])
+
+          # if we have a 'missed shot' then log that
+          if category == 'Missed Shot':
+            #get the time, shot type, player, and score diff
+            time = event.findtext('time')
+            totalTime = calculateTotalTime(time, periodCount)
+            shotType = int(event.findtext('shottype'))
+            player = event.findtext('player', '')
+            score = event.findtext('score')
+            if team == homeCity:
+              scoreDiff = calculateScoreDiff(score)
+            else:
+              scoreDiff = -calculateScoreDiff(score)
+
+            # rotate through players and add data to the one who shot
+            for playerData in playerDataArray:
+              if playerData[0] == player:
+                playerData[1].append([periodCount, totalTime, shotType, 0, scoreDiff])
 
   except IOError as e:
     print "I/O error({0}): {1}".format(e.errno, e.strerror)
@@ -88,50 +130,56 @@ def playerPointsHistParser(file, playerDiffs):
 # setup a list that has each player in it.
 # first element is player name (full)
 # second element is a blank list
-def setupPlayerDiffs():
+def setupPlayerDataArray():
+  print "setting up player data array."
   playersFileString = (k_playersFile)
   playersFile = open(playersFileString)
   playerData = json.load(playersFile)
   playersFile.close()
 
-  playerDiffs = []
+  playerDataArray = []
   players = playerData['players']
   for player in players:
     playerName = player['firstName'] + ' ' + player['lastName']
-    playerDiffs.append([playerName, []])
+    playerDataArray.append([playerName, []])
 
-  return playerDiffs
+  return playerDataArray
 
-# change playerDiffs to numpy arrays so we can fuck with them
-# takes playerDiffs with python lists
-# returns playerDiffs with numpy arrays
-def numpyPlayerDiffs(playerDiffs):
-  newPlayerDiffs = []
-  for playerDiff in playerDiffs:
-    newPlayerDiffs.append([playerDiff[0], np.array(playerDiff[1])])
+# change playerDataArray to numpy arrays so we can fuck with them
+# takes playerDataArray with python lists
+# returns playerDataArray with numpy arrays
+def numpyPlayerDataArray(playerDataArray):
+  print "converting to numpy array"
+  newPlayerDataArray = []
+  for playerData in playerDataArray:
+    newPlayerDataArray.append([playerData[0], np.array(playerData[1])])
 
-  return newPlayerDiffs
+  return newPlayerDataArray
 
 # create histogram data for each player
-# takes playerDiffs with numpy arrays
+# takes playerDataArray with numpy arrays
 # returns list of histogram data
-def arrayToHist(playerDiffs):
+def arrayToHist(playerDataArray):
   histData = []
-  for playerDiff in playerDiffs:
+  for playerDiff in playerDataArray:
     if playerDiff[1].size != 0:
       # diffs are the first column in the array
       diffs = playerDiff[1][ : , 0]
       # weights are the shot types, in the second column
       weights = playerDiff[1][ : , 1]
       playerHistData, edges = np.histogram(diffs, weights = weights, bins = k_bins)
-      histData.append([playerDiff[0], playerHistData)
+      histData.append([playerDiff[0], playerHistData])
 
-games = getPBPFiles()
-playerDiffs = setupPlayerDiffs()
-for game in games:
-  playerPointsHistParser(game, playerDiffs)
-
-arrayToHist(numpyPlayerDiffs(playerDiffs))
-
-# print the total number of points
-# print diffs.sum(axis=0)[1]
+# returns all shot data in a list, numpyPlayerDataArray
+# numpyPlayerDataArray[0] = players name
+# numpyPlayerDataArray[0] = players data as numpy array
+# numpyArray[0] = totalTime
+# numpyArray[1] = shotType (1, 2, 3)
+# numpyArray[2] = points scored
+# numpyArray[3] = scoreDiff
+def getShotData():
+  games = getPBPFiles()
+  playerDataArray = setupPlayerDataArray()
+  for game in games:
+    playerShotsParser(game, playerDataArray)
+  return numpyPlayerDataArray(playerDataArray)
