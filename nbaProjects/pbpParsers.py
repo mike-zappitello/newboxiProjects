@@ -121,6 +121,40 @@ def playerShotsParser(file, playerDataArray):
               if playerData[0] == player:
                 playerData[1].append([periodCount, totalTime, shotType, 0, scoreDiff])
 
+          # if we have a 'made free throw' then log that
+          if category == 'Made Free Throw':
+            #get the time, shot type, player, and score diff
+            time = event.findtext('time')
+            totalTime = calculateTotalTime(time, periodCount)
+            player = event.findtext('player', '')
+            score = event.findtext('score')
+            if team == homeCity:
+              scoreDiff = calculateScoreDiff(score)
+            else:
+              scoreDiff = -calculateScoreDiff(score)
+
+            # rotate through players and add data to the one who shot
+            for playerData in playerDataArray:
+              if playerData[0] == player:
+                playerData[1].append([periodCount, totalTime, 1, 1, scoreDiff])
+
+          # if we have a 'missed free throw' then log that
+          if category == 'Missed Free Throw':
+            #get the time, shot type, player, and score diff
+            time = event.findtext('time')
+            totalTime = calculateTotalTime(time, periodCount)
+            player = event.findtext('player', '')
+            score = event.findtext('score')
+            if team == homeCity:
+              scoreDiff = calculateScoreDiff(score)
+            else:
+              scoreDiff = -calculateScoreDiff(score)
+
+            # rotate through players and add data to the one who shot
+            for playerData in playerDataArray:
+              if playerData[0] == player:
+                playerData[1].append([periodCount, totalTime, 1, 0, scoreDiff])
+
   except IOError as e:
     print "I/O error({0}): {1}".format(e.errno, e.strerror)
   except ET.ParseError as e:
