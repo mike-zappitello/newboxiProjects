@@ -65,5 +65,7 @@ collaborative project to create interesting inforgraphs for nba stats
 
 -- TODO in the rest of the stats directory
 * scripts that analize numpy arrays / prepare it for analysis in python interpretur using pandas
+  - parsing all shots by player (done)
+  - parse events based on lineups ()
 * scripts for converting numpy arrays into plots using matplotlib
 
