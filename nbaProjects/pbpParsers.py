@@ -11,7 +11,8 @@ import re
 import json
 import numpy as np
 import dataDirs as dataDir
-# import matplotlib.pyplot as plt
+import matplotlib as ml
+import matplotlib.pyplot as plt
 # import matplotlib.mlab as mlab
 
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
@@ -185,6 +186,15 @@ def setupPlayerDataArray():
 def numpyPlayerDataArray(playerDataArray):
   print "converting to numpy array"
   newPlayerDataArray = []
+  ''' Structure of our numpy array
+  meta = [
+    {"name": "Period", "units": "none"}
+    {"name": "Time", "units": "sec"},
+    {"name": "ShotType", "units": "points"},
+    {"name": "PointsScored", "units": "points"},
+    {"name": "ScoreDiff", "units": "points"}
+  ]
+  '''
   for playerData in playerDataArray:
     newPlayerDataArray.append([playerData[0], np.array(playerData[1])])
 
@@ -206,14 +216,41 @@ def arrayToHist(playerDataArray):
 
 # returns all shot data in a list, numpyPlayerDataArray
 # numpyPlayerDataArray[0] = players name
-# numpyPlayerDataArray[0] = players data as numpy array
-# numpyArray[0] = totalTime
-# numpyArray[1] = shotType (1, 2, 3)
-# numpyArray[2] = points scored
-# numpyArray[3] = scoreDiff
+# numpyPlayerDataArray[1] = players data as numpy array
+# numpyArray[0] = period
+# numpyArray[1] = totalTime
+# numpyArray[2] = shotType (1, 2, 3)
+# numpyArray[3] = points scored
+# numpyArray[4] = scoreDiff
 def getShotData():
   games = getPBPFiles()
   playerDataArray = setupPlayerDataArray()
   for game in games:
     playerShotsParser(game, playerDataArray)
   return numpyPlayerDataArray(playerDataArray)
+
+def firstHistogram(playerDataArray):
+  for playerData in playerDataArray:
+    print "Createing Histogram for {0}".format(playerData[0])
+    if playerData[1].size == 0:
+      # if there is no data for the player, fuck it
+      break
+
+    # diffs are in 4th column
+    diffs = playerData[1][ : , 4]
+    # weights (points scored) are in the 2nd column
+    weights = playerData[1][ : , 2]
+
+    # playerHistData, edges = np.histogram(diffs, weights = weights, bins = k_bins)
+
+    plt.hist(diffs, bins=k_bins, weights=weights)
+    plt.title(playerData[0])
+    plt.xlim(k_bins[0], k_bins[-1])
+    plt.xlabel('Score Diff')
+    plt.ylabel('Points')
+
+    playerName = playerData[0].replace(" ", "")
+    saveLocation = (dataDir.k_histDir + playerName + ".png")
+    plt.savefig(saveLocation)
+
+firstHistogram(getShotData())
