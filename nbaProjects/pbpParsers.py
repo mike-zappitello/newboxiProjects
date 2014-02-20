@@ -82,6 +82,10 @@ def playerShotsParser(file, playerDataArray):
       for possession in period.iter('possession'):
         team = possession.findtext('team')
 
+        # TODO(zap) - parse through all offensive players and
+        # log the diff for them.  we'll use this to weight things
+        # in a little bit
+
         # parse through each event
         for event in possession.iter('event'):
           category = event.findtext('category')
@@ -176,7 +180,7 @@ def setupPlayerDataArray():
   players = playerData['players']
   for player in players:
     playerName = player['firstName'] + ' ' + player['lastName']
-    playerDataArray.append([playerName, []])
+    playerDataArray.append([playerName, [], []])
 
   return playerDataArray
 
@@ -200,23 +204,10 @@ def numpyPlayerDataArray(playerDataArray):
 
   return newPlayerDataArray
 
-# create histogram data for each player
-# takes playerDataArray with numpy arrays
-# returns list of histogram data
-def arrayToHist(playerDataArray):
-  histData = []
-  for playerDiff in playerDataArray:
-    if playerDiff[1].size != 0:
-      # diffs are the first column in the array
-      diffs = playerDiff[1][ : , 0]
-      # weights are the shot types, in the second column
-      weights = playerDiff[1][ : , 1]
-      playerHistData, edges = np.histogram(diffs, weights = weights, bins = k_bins)
-      histData.append([playerDiff[0], playerHistData])
-
 # returns all shot data in a list, numpyPlayerDataArray
 # numpyPlayerDataArray[0] = players name
 # numpyPlayerDataArray[1] = players data as numpy array
+# numpyPlayerDataArray[2] = point diffs when on court
 # numpyArray[0] = period
 # numpyArray[1] = totalTime
 # numpyArray[2] = shotType (1, 2, 3)
@@ -231,26 +222,28 @@ def getShotData():
 
 def firstHistogram(playerDataArray):
   for playerData in playerDataArray:
-    print "Createing Histogram for {0}".format(playerData[0])
     if playerData[1].size == 0:
       # if there is no data for the player, fuck it
-      break
+      print "No Player Data for {0}".format(playerData[0])
+    else :
+      print "Createing Histogram for {0}".format(playerData[0])
 
-    # diffs are in 4th column
-    diffs = playerData[1][ : , 4]
-    # weights (points scored) are in the 2nd column
-    weights = playerData[1][ : , 2]
+      # diffs are in 4th column
+      diffs = playerData[1][ : , 4]
+      # weights (points scored) are in the 2nd column
+      weights = playerData[1][ : , 2]
 
-    # playerHistData, edges = np.histogram(diffs, weights = weights, bins = k_bins)
+      # draw histogram and label it
+      plt.hist(diffs, bins=k_bins, weights=weights, rwidth=0.8)
+      plt.title(playerData[0])
+      plt.xlim(k_bins[0], k_bins[-1])
+      plt.xlabel('Score Diff')
+      plt.ylabel('Points')
 
-    plt.hist(diffs, bins=k_bins, weights=weights)
-    plt.title(playerData[0])
-    plt.xlim(k_bins[0], k_bins[-1])
-    plt.xlabel('Score Diff')
-    plt.ylabel('Points')
-
-    playerName = playerData[0].replace(" ", "")
-    saveLocation = (dataDir.k_histDir + playerName + ".png")
-    plt.savefig(saveLocation)
+      # save and clear the plot
+      playerName = playerData[0].replace(" ", "")
+      saveLocation = (dataDir.k_histDir + playerName + ".png")
+      plt.savefig(saveLocation)
+      plt.clf()
 
 firstHistogram(getShotData())
