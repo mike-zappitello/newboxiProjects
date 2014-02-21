@@ -257,6 +257,7 @@ def firstHistogram(playerDataArray):
       plt.xlim(bins[0], bins[-1])
       plt.xlabel('Score Diff')
       plt.ylabel('Points')
+      plt.legend()
 
       # save and clear the plot
       playerName = playerData[0].replace(" ", "")
