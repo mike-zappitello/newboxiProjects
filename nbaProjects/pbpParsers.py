@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
-k_bins = np.arange(-30, 31, 1)
 
 
 def getPBPFiles():
@@ -221,6 +220,7 @@ def getShotData():
   return numpyPlayerDataArray(playerDataArray)
 
 def firstHistogram(playerDataArray):
+  bins = np.arange(-36, 37, 2)
   for playerData in playerDataArray:
     if playerData[1].size == 0:
       # if there is no data for the player, fuck it
@@ -228,15 +228,33 @@ def firstHistogram(playerDataArray):
     else :
       print "Createing Histogram for {0}".format(playerData[0])
 
+      # sort into three data sets based on points scored
+      # NOT THE SAME AS SHOT TYPE!!!
+      threes = playerData[1][playerData[1][ : , 3] == 3]
+      twos = playerData[1][playerData[1][ : , 3] == 2]
+      ones = playerData[1][playerData[1][ : , 3] == 1]
+
       # diffs are in 4th column
-      diffs = playerData[1][ : , 4]
-      # weights (points scored) are in the 2nd column
-      weights = playerData[1][ : , 2]
+      threeDiffs = threes[ : , 4]
+      twoDiffs = twos[ : , 4]
+      oneDiffs = ones[ : , 4]
+      diffs = [oneDiffs, twoDiffs, threeDiffs]
+      # weights (points scored) are in the 3rd column
+      threeWeight = threes[ : , 3]
+      twoWeight = twos[ : , 3]
+      oneWeight = ones[ : , 3]
+      weights = [oneWeight, twoWeight, threeWeight]
 
       # draw histogram and label it
-      plt.hist(diffs, bins=k_bins, weights=weights, rwidth=0.8)
+      plt.hist(diffs,
+               bins=bins,
+               weights=weights,
+               rwidth=0.8,
+               stacked=True,
+               color=['red', 'blue', 'green'],
+               label=["Free Throws", "Twos", "Threes"])
       plt.title(playerData[0])
-      plt.xlim(k_bins[0], k_bins[-1])
+      plt.xlim(bins[0], bins[-1])
       plt.xlabel('Score Diff')
       plt.ylabel('Points')
 
