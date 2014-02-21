@@ -63,9 +63,22 @@ collaborative project to create interesting inforgraphs for nba stats
 * each parser would massage the data into the right form
 * then i could just make things from there i suppose
 
+-- pbpParsers.py
+* its a bunch of methods that get data into an array to be analized
+* currently grabs all play by play xmls and parses them by player
+* parses for shots both made and missed
+* creates a hitogram of points vs score diff by shot type for each player
+* its going to be important to structure this correctly and keep things modular
+
 -- TODO in the rest of the stats directory
 * scripts that analize numpy arrays / prepare it for analysis in python interpretur using pandas
   - parsing all shots by player (done)
   - parse events based on lineups ()
 * scripts for converting numpy arrays into plots using matplotlib
+  - a 2d histogram that colors shot percentage with time remaining on the y and point diff on the x
+  - start normalizing things
+* start looking into how units fit in with everything
+* look at better way to keep json of players and teams they play on
+* add team colors and logos for styling
+* maybe add player number .jpg's and faces for styling
 
