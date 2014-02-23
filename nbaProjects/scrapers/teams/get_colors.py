@@ -37,7 +37,6 @@ class colorHTMLParser(HTMLParser):
   # function to start the parser taking in the url and old team data
   def start_parse(self, html, teamData):
     self.teamData = teamData
-    self.newTeamData = []
     self.tag_stack = []
     self.feed(html)
     return self.teamData
