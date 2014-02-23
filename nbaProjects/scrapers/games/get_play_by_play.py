@@ -15,7 +15,7 @@ k_baseUrl = ('http://www.cs.umd.edu/hcil/eventflow/NBA/gameFiles/')
 
 # returns all of the schecdule files is dataDir.k_scheduleDir
 def getScheduleFiles():
-  schedulefiles = [ f for f in listdir(dataDir.k_scheduleDir) if isfile(join(k_scheduleDir ,f)) ]
+  schedulefiles = [ f for f in listdir(dataDir.k_scheduleDir) if isfile(join(dataDir.k_scheduleDir ,f)) ]
   return schedulefiles
 
 # takes in a base name for a json dict in dataDir.k_scheduleDir
@@ -48,6 +48,8 @@ def getGames(baseName, teamData):
 
       dateString = month + day + year
       awayTeam = game['opponent']['nickname']
+      if awayTeam == 'Trail Blazers':
+        awayTeam = 'TrailBlazers'
       gameString = homeTeam + '-' + awayTeam + '-' + dateString +  ".xml"
       gameStrings.append(gameString)
 
@@ -78,16 +80,16 @@ def saveGames():
   for gameString in gameStrings:
     gameUrl = k_baseUrl + gameString
     try:
-      print "saving game {0}".format(gameString)
-      gamePage = urllib2.urlopen(gameUrl)
-      gameData = gamePage.read()
-      gamePage.close()
       gameFileString = dataDir.k_pbpDir + gameString
-      gameFile = open(gameFileString, 'w+')
-      gameFile.write(gameData)
-      gameFile.close()
+      if not isfile(gameFileString):
+        print "saving game {0}".format(gameString)
+        gamePage = urllib2.urlopen(gameUrl)
+        gameData = gamePage.read()
+        gamePage.close()
+        gameFile = open(gameFileString, 'w+')
+        gameFile.write(gameData)
+        gameFile.close()
     except urllib2.URLError as e:
       print "URL Error({0}): {1}".format(e.errno, e.strerror)
 
 saveGames()
-

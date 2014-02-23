@@ -11,16 +11,6 @@ k_colorUrl = "http://teamcolors.arc90.com/"
 # teams file
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 
-# open up the teams json file and setup a json object of its data
-# we'll be writing our colors to theis json dict, and then 
-# resaving it to the file
-def getTeamData():
-  teamsFileString = (k_teamsFile)
-  teamsFile = open(teamsFileString)
-  teamData = json.load(teamsFile)
-  teamsFile.close()
-  return teamData['teams']
-
 # open up the team json file
 # create a json string with our new team data
 # save and close the file
@@ -124,6 +114,6 @@ def getColorHtml():
 
 # setup the parser, get the html, parse it, and save the new stuff
 parser = colorHTMLParser()
-teamData = getTeamData()
+teamData = dataDir.getTeamData()
 newTeamData =  parser.start_parse(getColorHtml(), teamData)
 saveTeamData(newTeamData)

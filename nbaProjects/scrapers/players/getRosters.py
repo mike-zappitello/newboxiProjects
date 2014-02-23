@@ -2,23 +2,10 @@ import urllib2
 from HTMLParser import HTMLParser
 import dataDirs as dataDir
 import json
-import dataDirs as dataDir
 import re
 
 # url containing roster data
 k_baseUrl = 'http://www.eskimo.com/~pbender/rosters.html'
-# teams file
-k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
-
-# open up the teams json file and setup a json object of its data
-# we'll be writing our colors to theis json dict, and then 
-# resaving it to the file
-def getTeamData():
-  teamsFileString = (k_teamsFile)
-  teamsFile = open(teamsFileString)
-  teamData = json.load(teamsFile)
-  teamsFile.close()
-  return teamData['teams']
 
 # open up the team json file
 # create a json string with our new team data
@@ -129,6 +116,6 @@ def saveData(dataAsList):
 
 # setup the parser, get the html, parse it, and save the new stuff
 parser = rosterHTMLParser()
-teamData = getTeamData()
+teamData = dataDir.getTeamData()
 newData =  parser.start_parse(getRosterHtml(), teamData)
 saveTeamData(newData)
