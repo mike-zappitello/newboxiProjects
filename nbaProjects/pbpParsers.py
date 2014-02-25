@@ -18,18 +18,6 @@ import matplotlib.pyplot as plt
 k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
 k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
 
-
-# returns a list of all the play by play xml files
-def getPBPFiles():
-  playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
-  return playByPlayFiles
-
-# returns a list of the first ten games in the play by play xml files
-# used for testing
-def getTenPBPFiles():
-  playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
-  return playByPlayFiles[:10]
-
 # accepts a score as a string <int>-<int>
 # returns the difference as home minus away
 def calculateScoreDiff(scoreString):
@@ -51,50 +39,6 @@ def calculateTotalTime(timeString, period):
   minutes = int(periodTime.group('minutes'))
   seconds = int(periodTime.group('seconds'))
   return (period * 12 + minutes) * 60 + seconds
-
-
-# accepts a teams nickname
-# returns the teams city in all capitals
-# TODO - find a solution for Los Angeles
-def nickToCity(nickname, teams):
-  '''
-  teamsFileString = (k_teamsFile)
-  teamsFile = open(teamsFileString)
-  teamData = json.load(teamsFile)
-  teamsFile.close()
-
-  teams = teamData['teams']
-  '''
-  for team in teams:
-    if nickname == team['nickname']:
-      city = team['location']
-
-  return city.upper()
-
-# creates a list that will hold play by play data for units
-# takes the teamsData list from json
-# returns a list of all the teams and a blank list for units
-def createUnitPBPArray(teams):
-  unitPBPData = {}
-  for team in teams:
-    unitPBPData[team['nickname']] = []
-  return unitPBPData
-
-# finds or creates a list for a units data in the unitData
-# takes oUnit_str - a string listing the players on offense
-# takes a list of all the units on a team
-# if the unit already exists, returns that units list of pbpData
-# if the unid dne, creates a new list to return
-#
-# TODO - make sure the units are always in the same order
-# if they aren't, then comparison needs to be beefed up
-def findOrAddUnit(unit_str, teamData):
-  players = unit_str.split(', ')
-  for unit in teamData:
-    if unit[0] == players:
-      return unit
-  teamData.append([players, []])
-  return teamData[-1]
 
 # takes a category as a string
 # returns a category as an int
@@ -121,203 +65,209 @@ def categoryToIndex(cat):
     print 'Category {0} not found'.format(cat)
     return 0
 
+class playByPlayParser():
+  def __init__(self):
+    #setup teams dict from teams.json using dataDir
+    self.teams = dataDir.getTeamData()
 
-# takes a unitPBPData list and fills it out while parsing out a play by play data file
-def unitPlayByPlayParser(file, unitData, teamData):
-  try:
-    gameTree = ET.parse(dataDir.k_pbpDir + file)
-    game = gameTree.getroot()
+    # setup empty units by team dict
+    self.unitsByTeam = {}
+    for team in self.teams:
+      self.unitsByTeam[team['nickname']] = []
 
-    homeTeam = game.findtext('home-team')
-    homeCity = nickToCity(homeTeam, teamData)
-    awayTeam = game.findtext('away-team')
-    awayCity = nickToCity(awayTeam, teamData)
-    gameID = game.findtext('id')
+    # setup empty players by team dict
+    self.playersByTeam = {}
+    for team in self.teams:
+      # playerData = []
+      players = team['roster']
+      self.playersByTeam[team['nickname']] = []
+      for player in players:
+        playerName = player['first_name'] + ' ' + player['last_name']
+        self.playersByTeam[team['nickname']].append([playerName, [], []])
 
-    print "parsing {0} at {1}".format(awayCity, homeCity)
+    self.getTenPBPFiles()
 
-    periodCount = int(0)
-    # parse through each period
-    for period in game.iter('period'):
-      periodCount += 1
+# returns a list of all the play by play xml files
+  def getPBPFiles(self):
+    self.playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
 
-      #parse through each possession
-      for possession in period.iter('possession'):
-        # get the team with the ball and their lineup
-        team = possession.findtext('team')
-        if team == homeCity:
-          oTeam = homeTeam
-          oUnit_str = possession.findtext('home-players')
-        elif team == awayCity:
-          oTeam = awayTeam
-          oUnit_str = possession.findtext('away-players')
-        else:
-          print 'team {0} neq to {1} or {2}'.format(team, homeCity, awayCity)
-          raise ET.ParseError(0, 'cutsom parse error')
+  # returns a list of the first ten games in the play by play xml files
+  # used for testing
+  def getTenPBPFiles(self):
+    playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
+    self.playByPlayFiles = playByPlayFiles[:10]
 
-        # find the unit in the data array or add it
-        oUnit = findOrAddUnit(oUnit_str, unitData[oTeam])
+  # accepts a teams nickname
+  # returns the teams city in all capitals
+  # TODO - find a solution for Los Angeles
+  def nickToCity(self, nickname):
+    for team in self.teams:
+      if nickname == team['nickname']:
+        city = team['location']
 
-        # record all the events of the possesion in the oUnit list
-        for event in possession.iter('event'):
-          # get an index for the category
-          category = categoryToIndex(event.findtext('category'))
+    return city.upper()
 
-          # get the player
-          player = event.findtext('player')
+  # finds or creates a list for a units data in the unitData
+  # takes oUnit_str - a string listing the players on offense
+  # takes a list of all the units on a team
+  # if the unit already exists, returns that units list of pbpData
+  # if the unid dne, creates a new list to return
+  #
+  # TODO - make sure the units are always in the same order
+  # if they aren't, then comparison needs to be beefed up
+  def findOrAddUnit(self, unit_str, teamData):
+    players = unit_str.split(', ')
+    for unit in teamData:
+      if unit[0] == players:
+        return unit
+    teamData.append([players, []])
+    return teamData[-1]
 
-          # get the time and total time
-          time = event.findtext('time')
-          totalTime = calculateTotalTime(time, periodCount)
+  # parses all of the play by play data for a unit
+  # takes a file that contains play by play data in xml
+  # takes a dict with lists for each team for the play by play data
+  # takes team data as a dict from teams.json
+  # returns the updated unit data
+  def parseUnitEvents(self):
+    try:
+      for file in self.playByPlayFiles:
+        gameTree = ET.parse(dataDir.k_pbpDir + file)
+        game = gameTree.getroot()
 
-          # get the score diff
-          score = event.findtext('score')
-          if team == homeCity:
-            scoreDiff = calculateScoreDiff(score)
-          else:
-            scoreDiff = -calculateScoreDiff(score)
+        homeTeam = game.findtext('home-team')
+        homeCity = self.nickToCity(homeTeam)
+        awayTeam = game.findtext('away-team')
+        awayCity = self.nickToCity(awayTeam)
+        gameID = game.findtext('id')
 
-          # get the value of the shot on the score
-          value = event.findtext('shottype')
-          if not value:
-            value = 0
+        print "parsing {0} at {1}".format(awayCity, homeCity)
 
-          # add the event to the units event list
-          oUnit[1].append([category, player, totalTime, scoreDiff, value])
+        periodCount = int(0)
+        # parse through each period
+        for period in game.iter('period'):
+          periodCount += 1
 
-  except IOError as e:
-    print "I/O error({0}): {1}".format(e.errno, e.strerror)
-  except ET.ParseError as e:
-    errorStr = expat.ErrorString(e.code)
-    print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
-
-# parse all of the shot data from a single game into an array
-# accepts a file to parse and the playerDataArray to fill out
-# retruns the filled out playerDataArray
-def playerShotsParser(file, playerDataArray):
-  try:
-    gameTree = ET.parse(dataDir.k_pbpDir + file)
-    game = gameTree.getroot()
-
-    homeTeam = game.findtext('home-team')
-    homeCity = nickToCity(homeTeam)
-    awayTeam = game.findtext('away-team')
-    awayCity = nickToCity(awayTeam)
-
-    print "parsing {0} at {1}".format(awayCity, homeCity)
-
-    periodCount = int(0)
-    # parse through each period
-    for period in game.iter('period'):
-      periodCount += 1
-
-      # parse through each possesion
-      for possession in period.iter('possession'):
-        team = possession.findtext('team')
-
-        # TODO(zap) - parse through all offensive players and
-        # log the diff for them.  we'll use this to weight things
-        # in a little bit
-
-        # parse through each event
-        for event in possession.iter('event'):
-          category = event.findtext('category')
-
-          # if we have a 'made shot' then log it
-          if category == 'Made Shot':
-            # get the time, shot type, player, and score diff
-            time = event.findtext('time')
-            totalTime = calculateTotalTime(time, periodCount)
-            shotType = int(event.findtext('shottype'))
-            player = event.findtext('player')
-            score = event.findtext('score')
+          #parse through each possession
+          for possession in period.iter('possession'):
+            # get the team with the ball and their lineup
+            team = possession.findtext('team')
             if team == homeCity:
-              scoreDiff = calculateScoreDiff(score)
+              oTeam = homeTeam
+              oUnit_str = possession.findtext('home-players')
+            elif team == awayCity:
+              oTeam = awayTeam
+              oUnit_str = possession.findtext('away-players')
             else:
-              scoreDiff = -calculateScoreDiff(score)
+              print 'team {0} neq to {1} or {2}'.format(team, homeCity, awayCity)
+              raise ET.ParseError(0, 'cutsom parse error')
 
-            # rotate through the players and add data to the one who shot
-            for playerData in playerDataArray:
-              if playerData[0] == player:
-                playerData[1].append([periodCount, totalTime, shotType, shotType, scoreDiff])
+            # find the unit in the data array or add it
+            oUnit = findOrAddUnit(oUnit_str, self.unitsByTeam[oTeam])
 
-          # if we have a 'missed shot' then log that
-          if category == 'Missed Shot':
-            #get the time, shot type, player, and score diff
-            time = event.findtext('time')
-            totalTime = calculateTotalTime(time, periodCount)
-            shotType = int(event.findtext('shottype'))
-            player = event.findtext('player', '')
-            score = event.findtext('score')
-            if team == homeCity:
-              scoreDiff = calculateScoreDiff(score)
-            else:
-              scoreDiff = -calculateScoreDiff(score)
+            # record all the events of the possesion in the oUnit list
+            for event in possession.iter('event'):
+              # get an index for the category
+              category = categoryToIndex(event.findtext('category'))
 
-            # rotate through players and add data to the one who shot
-            for playerData in playerDataArray:
-              if playerData[0] == player:
-                playerData[1].append([periodCount, totalTime, shotType, 0, scoreDiff])
+              # get the player
+              player = event.findtext('player')
 
-          # if we have a 'made free throw' then log that
-          if category == 'Made Free Throw':
-            #get the time, shot type, player, and score diff
-            time = event.findtext('time')
-            totalTime = calculateTotalTime(time, periodCount)
-            player = event.findtext('player', '')
-            score = event.findtext('score')
-            if team == homeCity:
-              scoreDiff = calculateScoreDiff(score)
-            else:
-              scoreDiff = -calculateScoreDiff(score)
+              # get the time and total time
+              time = event.findtext('time')
+              totalTime = calculateTotalTime(time, periodCount)
 
-            # rotate through players and add data to the one who shot
-            for playerData in playerDataArray:
-              if playerData[0] == player:
-                playerData[1].append([periodCount, totalTime, 1, 1, scoreDiff])
+              # get the score diff
+              score = event.findtext('score')
+              if team == homeCity:
+                scoreDiff = calculateScoreDiff(score)
+              else:
+                scoreDiff = -calculateScoreDiff(score)
 
-          # if we have a 'missed free throw' then log that
-          if category == 'Missed Free Throw':
-            #get the time, shot type, player, and score diff
-            time = event.findtext('time')
-            totalTime = calculateTotalTime(time, periodCount)
-            player = event.findtext('player', '')
-            score = event.findtext('score')
-            if team == homeCity and score:
-              scoreDiff = calculateScoreDiff(score)
-            elif team == awayCity and score:
-              scoreDiff = -calculateScoreDiff(score)
-            else:
-              scoreDiff = 0
+              # get the value of the shot on the score
+              value = event.findtext('shottype')
+              if not value:
+                value = 0
 
-            # rotate through players and add data to the one who shot
-            for playerData in playerDataArray:
-              if playerData[0] == player:
-                playerData[1].append([periodCount, totalTime, 1, 0, scoreDiff])
+              # add the event to the units event list
+              oUnit[1].append([category, player, totalTime, scoreDiff, value, inPossession])
 
-  except IOError as e:
-    print "I/O error({0}): {1}".format(e.errno, e.strerror)
-  except ET.ParseError as e:
-    errorStr = expat.ErrorString(e.code)
-    print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
+    except IOError as e:
+      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+    except ET.ParseError as e:
+      errorStr = expat.ErrorString(e.code)
+      print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
-# setup a list that has each player in it.
-# first element is player name (full)
-# second element is a blank list
-def setupPlayerDataArray():
-  print "setting up player data array."
-  playersFileString = (k_playersFile)
-  playersFile = open(playersFileString)
-  playerData = json.load(playersFile)
-  playersFile.close()
+  # parse all of the shot data from a single game into an array
+  # accepts a file to parse and the playerDataArray to fill out
+  # retruns the filled out playerDataArray
+  def parsePlayerShots(self):
+    try:
+      for file in self.playByPlayFiles:
+        gameTree = ET.parse(dataDir.k_pbpDir + file)
+        game = gameTree.getroot()
 
-  playerDataArray = []
-  players = playerData['players']
-  for player in players:
-    playerName = player['firstName'] + ' ' + player['lastName']
-    playerDataArray.append([playerName, [], []])
+        homeTeam = game.findtext('home-team')
+        homeCity = self.nickToCity(homeTeam)
+        homeRoster = self.playersByTeam[homeTeam]
+        awayTeam = game.findtext('away-team')
+        awayCity = self.nickToCity(awayTeam)
+        awayRoster = self.playersByTeam[awayTeam]
 
-  return playerDataArray
+        print "parsing {0} at {1}".format(awayCity, homeCity)
+
+        periodCount = int(0)
+        # parse through each period
+        for period in game.iter('period'):
+          periodCount += 1
+
+          # parse through each possesion
+          for possession in period.iter('possession'):
+            team = possession.findtext('team')
+
+            # parse through each event
+            for event in possession.iter('event'):
+              category = categoryToIndex(event.findtext('category'))
+    'Made Free Throw' : 3,
+    'Missed Free Throw' : 4,
+    'Made Shot' : 5,
+    'Missed Shot' : 6,
+
+              # if we have a 'made shot' then log it
+              if (category == 3 or
+                  category == 4 or
+                  category == 5 or
+                  category == 6):
+                isHomeTeam = (team == homeCity)
+                time = event.findtext('time')
+                totalTime = calculateTotalTime(time, periodCount)
+                player = event.findtext('player')
+                score = event.findtext('score')
+                if isHomeTeam:
+                  scoreDiff = calculateScoreDiff(score)
+                  players = homeRoster
+                else:
+                  scoreDiff = -calculateScoreDiff(score)
+                  players = awayRoster
+
+                # rotate through the players and add data to the one who shot
+                for playerData in players:
+                  if playerData[0] == player:
+                    if (category == 5):
+                      shotType = int(event.findtext('shottype'))
+                      playerData[1].append([periodCount, totalTime, shotType, shotType, scoreDiff])
+                    if (category == 3):
+                      playerData[1].append([periodCount, totalTime, 1, 1, scoreDiff])
+                    if (category == 6):
+                      shotType = int(event.findtext('shottype'))
+                      playerData[1].append([periodCount, totalTime, shotType, 0, scoreDiff])
+                    if (category ==  4):
+                      playerData[1].append([periodCount, totalTime, 1, 0, scoreDiff])
+
+    except IOError as e:
+      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+    except ET.ParseError as e:
+      errorStr = expat.ErrorString(e.code)
+      print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
 # change playerDataArray to numpy arrays so we can fuck with them
 # takes playerDataArray with python lists
@@ -338,22 +288,6 @@ def numpyPlayerDataArray(playerDataArray):
     newPlayerDataArray.append([playerData[0], np.array(playerData[1])])
 
   return newPlayerDataArray
-
-# returns all shot data in a list, numpyPlayerDataArray
-# numpyPlayerDataArray[0] = players name
-# numpyPlayerDataArray[1] = players data as numpy array
-# numpyPlayerDataArray[2] = point diffs when on court
-# numpyArray[0] = period
-# numpyArray[1] = totalTime
-# numpyArray[2] = shotType (1, 2, 3)
-# numpyArray[3] = points scored
-# numpyArray[4] = scoreDiff
-def getShotData():
-  games = getPBPFiles()
-  playerDataArray = setupPlayerDataArray()
-  for game in games:
-    playerShotsParser(game, playerDataArray)
-  return numpyPlayerDataArray(playerDataArray)
 
 def firstHistogram(playerDataArray):
   bins = np.arange(-36, 37, 2)
@@ -401,8 +335,3 @@ def firstHistogram(playerDataArray):
       plt.savefig(saveLocation)
       plt.clf()
 
-# firstHistogram(getShotData())
-k_teamsData = dataDir.getTeamData()
-unitDataList = createUnitPBPArray(k_teamsData)
-for pbpFile in getTenPBPFiles():
-  unitPlayByPlayParser(pbpFile, unitDataList, k_teamsData)
