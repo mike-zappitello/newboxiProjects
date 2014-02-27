@@ -72,26 +72,35 @@ class playByPlayParser():
 
     # setup empty units by team dict
     self.unitsByTeam = {}
+    self.unitsByTeamNumpy = {}
     for team in self.teams:
       self.unitsByTeam[team['nickname']] = []
+      self.unitsByTeamNumpy[team['nickname']] = []
 
     # setup empty players by team dict
     self.playersByTeam = {}
+    self.playersByTeamNumpy = {}
     for team in self.teams:
-      # playerData = []
       players = team['roster']
       self.playersByTeam[team['nickname']] = []
+      self.playersByTeamNumpy[team['nickname']] = []
       for player in players:
         playerName = player['first_name'] + ' ' + player['last_name']
-        self.playersByTeam[team['nickname']].append([playerName, [], []])
+        self.playersByTeam[team['nickname']].append([playerName, []])
 
     self.getTenPBPFiles()
 
-# returns a list of all the play by play xml files
+  # helper function for quick debugging
+  def debug(self):
+    self.getTenPBPFiles()
+    self.parsePlayerShots()
+    self.numpyPlayerDataArray()
+
+  # loads a list of all the play by play xml files
   def getPBPFiles(self):
     self.playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
 
-  # returns a list of the first ten games in the play by play xml files
+  # loads a list of the first ten games in the play by play xml files
   # used for testing
   def getTenPBPFiles(self):
     playByPlayFiles = [ f for f in listdir(dataDir.k_pbpDir) if isfile(join(dataDir.k_pbpDir ,f)) ]
@@ -227,10 +236,6 @@ class playByPlayParser():
             # parse through each event
             for event in possession.iter('event'):
               category = categoryToIndex(event.findtext('category'))
-    'Made Free Throw' : 3,
-    'Missed Free Throw' : 4,
-    'Made Shot' : 5,
-    'Missed Shot' : 6,
 
               # if we have a 'made shot' then log it
               if (category == 3 or
@@ -269,25 +274,26 @@ class playByPlayParser():
       errorStr = expat.ErrorString(e.code)
       print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
-# change playerDataArray to numpy arrays so we can fuck with them
-# takes playerDataArray with python lists
-# returns playerDataArray with numpy arrays
-def numpyPlayerDataArray(playerDataArray):
-  print "converting to numpy array"
-  newPlayerDataArray = []
-  ''' Structure of our numpy array
-  meta = [
-    {"name": "Period", "units": "none"}
-    {"name": "Time", "units": "sec"},
-    {"name": "ShotType", "units": "points"},
-    {"name": "PointsScored", "units": "points"},
-    {"name": "ScoreDiff", "units": "points"}
-  ]
-  '''
-  for playerData in playerDataArray:
-    newPlayerDataArray.append([playerData[0], np.array(playerData[1])])
-
-  return newPlayerDataArray
+  # change playersByTeam to use numpy arrays so we can fuck with them
+  # takes playersByTeam with python lists
+  # creates playersByTeamNumpy with numpy arrays
+  def numpyPlayerDataArray(self):
+    print "converting to numpy array"
+    ''' Structure of our numpy array
+    meta = [
+      {"name": "Period", "units": "none"}
+      {"name": "Time", "units": "sec"},
+      {"name": "ShotType", "units": "points"},
+      {"name": "PointsScored", "units": "points"},
+      {"name": "ScoreDiff", "units": "points"}
+    ]
+    '''
+    for team in self.teams:
+      rosterData = self.playersByTeam[team['nickname']]
+      rosterDataNumpy = self.playersByTeamNumpy[team['nickname']]
+      for playerData in rosterData:
+        print "numpify player {0}".format(playerData[0])
+        rosterDataNumpy.append([playerData[0], np.array(playerData[1])])
 
 def firstHistogram(playerDataArray):
   bins = np.arange(-36, 37, 2)
