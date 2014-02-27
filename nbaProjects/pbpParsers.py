@@ -93,8 +93,9 @@ class playByPlayParser():
   # helper function for quick debugging
   def debug(self):
     self.getTenPBPFiles()
-    self.parsePlayerShots()
-    self.numpyPlayerDataArray()
+    self.parseUnitEvents()
+    self.numpyUnitsByTeam()
+    print self.unitsByTeamNumpy
 
   # loads a list of all the play by play xml files
   def getPBPFiles(self):
@@ -171,7 +172,7 @@ class playByPlayParser():
               raise ET.ParseError(0, 'cutsom parse error')
 
             # find the unit in the data array or add it
-            oUnit = findOrAddUnit(oUnit_str, self.unitsByTeam[oTeam])
+            oUnit = self.findOrAddUnit(oUnit_str, self.unitsByTeam[oTeam])
 
             # record all the events of the possesion in the oUnit list
             for event in possession.iter('event'):
@@ -198,7 +199,7 @@ class playByPlayParser():
                 value = 0
 
               # add the event to the units event list
-              oUnit[1].append([category, player, totalTime, scoreDiff, value, inPossession])
+              oUnit[1].append([category, player, totalTime, scoreDiff, value])
 
     except IOError as e:
       print "I/O error({0}): {1}".format(e.errno, e.strerror)
@@ -274,11 +275,17 @@ class playByPlayParser():
       errorStr = expat.ErrorString(e.code)
       print "Parser Error({0}) in file {1}, position {2}".format(errorStr, file, e.position)
 
-  # change playersByTeam to use numpy arrays so we can fuck with them
-  # takes playersByTeam with python lists
-  # creates playersByTeamNumpy with numpy arrays
-  def numpyPlayerDataArray(self):
-    print "converting to numpy array"
+  # convert unitsByTeam to user numpy arrays so we can fuck with them
+  def numpyUnitsByTeam(self):
+    print "converting units by team to numpy"
+    for team in self.teams:
+      unitsData = self.unitsByTeam[team['nickname']]
+      for unitData in unitsData:
+        self.unitsByTeamNumpy[team['nickname']].append([unitData[0], np.array(unitData[1])])
+
+  # conver playersByTeam to use numpy arrays so we can fuck with them
+  def numpyPlayersByTeam(self):
+    print "converting players by team to numpy"
     ''' Structure of our numpy array
     meta = [
       {"name": "Period", "units": "none"}
@@ -292,8 +299,7 @@ class playByPlayParser():
       rosterData = self.playersByTeam[team['nickname']]
       rosterDataNumpy = self.playersByTeamNumpy[team['nickname']]
       for playerData in rosterData:
-        print "numpify player {0}".format(playerData[0])
-        rosterDataNumpy.append([playerData[0], np.array(playerData[1])])
+        self.playersByTeamNumpy[team['nickname']].append([playerData[0], np.array(playerData[1])])
 
 def firstHistogram(playerDataArray):
   bins = np.arange(-36, 37, 2)
