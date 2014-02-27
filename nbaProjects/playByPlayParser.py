@@ -1,6 +1,7 @@
 '''
-functions to grab the data from all of the games and parse them into
-data sets that fit the analysis that i'm trying to run
+copyright mzappitello 2014
+parser class to grab the data from all of the play by play data for each
+game. converts each event into an entry into a numpy array to be used in analysis.
 '''
 
 import xml.etree.ElementTree as ET
@@ -13,10 +14,6 @@ import numpy as np
 import dataDirs as dataDir
 import matplotlib as ml
 import matplotlib.pyplot as plt
-# import matplotlib.mlab as mlab
-
-k_teamsFile = (dataDir.k_teamsDir + 'teams.json')
-k_playersFile = (dataDir.k_rosterDir + 'leagueRoster.json')
 
 # accepts a score as a string <int>-<int>
 # returns the difference as home minus away
@@ -96,6 +93,24 @@ class playByPlayParser():
     self.parseUnitEvents()
     self.numpyUnitsByTeam()
     print self.unitsByTeamNumpy
+
+  # helper function to create, fill and return unitsByTeamNumpy
+  # retruns filled out unitsByTeamNumpy
+  # TODO(me) - create a bool to see test against if we've already parsed
+  def numpyUnitsData():
+    self.getPBPFiles()
+    self.parseUnitEvents()
+    self.numpyUnitsByTeam()
+    return self.unitsByTeamNumpy
+
+  # helper function to create, fill and return playersByTeamNumpy
+  # retruns filled out unitsByTeamNumpy
+  # TODO(me) - create a bool to see test against if we've already parsed
+  def numpyPlayersData(self):
+    self.getPBPFiles()
+    self.parsePlayerShots()
+    self.numpyPlayersByTeam()
+    return self.playersByTeamNumpy
 
   # loads a list of all the play by play xml files
   def getPBPFiles(self):
@@ -300,50 +315,4 @@ class playByPlayParser():
       rosterDataNumpy = self.playersByTeamNumpy[team['nickname']]
       for playerData in rosterData:
         self.playersByTeamNumpy[team['nickname']].append([playerData[0], np.array(playerData[1])])
-
-def firstHistogram(playerDataArray):
-  bins = np.arange(-36, 37, 2)
-  for playerData in playerDataArray:
-    if playerData[1].size == 0:
-      # if there is no data for the player, fuck it
-      print "No Player Data for {0}".format(playerData[0])
-    else :
-      print "Createing Histogram for {0}".format(playerData[0])
-
-      # sort into three data sets based on points scored
-      # NOT THE SAME AS SHOT TYPE!!!
-      threes = playerData[1][playerData[1][ : , 3] == 3]
-      twos = playerData[1][playerData[1][ : , 3] == 2]
-      ones = playerData[1][playerData[1][ : , 3] == 1]
-
-      # diffs are in 4th column
-      threeDiffs = threes[ : , 4]
-      twoDiffs = twos[ : , 4]
-      oneDiffs = ones[ : , 4]
-      diffs = [oneDiffs, twoDiffs, threeDiffs]
-      # weights (points scored) are in the 3rd column
-      threeWeight = threes[ : , 3]
-      twoWeight = twos[ : , 3]
-      oneWeight = ones[ : , 3]
-      weights = [oneWeight, twoWeight, threeWeight]
-
-      # draw histogram and label it
-      plt.hist(diffs,
-               bins=bins,
-               weights=weights,
-               rwidth=0.8,
-               stacked=True,
-               color=['red', 'blue', 'green'],
-               label=["Free Throws", "Twos", "Threes"])
-      plt.title(playerData[0])
-      plt.xlim(bins[0], bins[-1])
-      plt.xlabel('Score Diff')
-      plt.ylabel('Points')
-      plt.legend()
-
-      # save and clear the plot
-      playerName = playerData[0].replace(" ", "")
-      saveLocation = (dataDir.k_histDir + playerName + ".png")
-      plt.savefig(saveLocation)
-      plt.clf()
 
