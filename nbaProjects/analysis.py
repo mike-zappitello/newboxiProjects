@@ -7,35 +7,37 @@ import numpy as np
 import dataDirs as dataDir
 import matplotlib as ml
 import matplotlib.pyplot as plt
-from playByPlayPasrer import playByPlayParser as parser
+from playByPlayParser import playByPlayParser as parser
 
 '''
 TODO
 -- create a class for analysis
-* it has a parser as a member
 * there are some bools to see if we have parsed things already
 * methods for analysis
 * methods to take numpy arrays and apply analsys methods to them
-
 '''
 
 class analyzer():
-  def __init__:
+  def __init__(self, debug = False):
     self.parser = parser()
+    self.debug = debug
 
-  def unitAnalysis(method):
-    units_by_team_data = parser.numpyUnitsData()
+  def unitAnalysis(self, method):
+    units_by_team_data = self.parser.numpyUnitsData(self.debug)
     for team in self.parser.teams:
-      units_data = units_by_team[team['nickname']]
+      units_data = units_by_team_data[team['nickname']]
       for unit in units_data:
         method(unit)
 
-  def playerAnalysis(method):
-    players_by_team_data = parser.numpyPlayersData()
+  def playerAnalysis(self, method):
+    players_by_team_data = self.parser.numpyPlayersData(self.debug)
     for team in self.parser.teams:
-      players_data = players_by_team[team['nickname']]
-      for player in player_data:
+      players_data = players_by_team_data[team['nickname']]
+      for player in players_data:
         method(player)
+
+def debugAnalysis(player_data):
+  print "data for player {0}".format(player_data[0])
 
 def firstHistogram(playerDataArray):
   bins = np.arange(-36, 37, 2)

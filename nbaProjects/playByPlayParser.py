@@ -85,7 +85,13 @@ class playByPlayParser():
         playerName = player['first_name'] + ' ' + player['last_name']
         self.playersByTeam[team['nickname']].append([playerName, []])
 
-    self.getTenPBPFiles()
+    # init bools to keep track of what we've parsed
+    # we'll test against this before we parse through everything
+    #
+    # TODO - seupt a list of games that we've parsed and check against that
+    # before we start parsing
+    self.players_parsed = False
+    self.units_parsed = False
 
   # helper function for quick debugging
   def debug(self):
@@ -96,20 +102,33 @@ class playByPlayParser():
 
   # helper function to create, fill and return unitsByTeamNumpy
   # retruns filled out unitsByTeamNumpy
-  # TODO(me) - create a bool to see test against if we've already parsed
-  def numpyUnitsData():
-    self.getPBPFiles()
-    self.parseUnitEvents()
-    self.numpyUnitsByTeam()
+  def numpyUnitsData(self, debug = False):
+    if debug:
+      self.getTenPBPFiles()
+    else:
+      self.getPBPFiles()
+
+    # if we haven't parsed units, do it
+    if not self.units_parsed:
+      self.parseUnitEvents()
+      self.numpyUnitsByTeam()
+
     return self.unitsByTeamNumpy
 
   # helper function to create, fill and return playersByTeamNumpy
   # retruns filled out unitsByTeamNumpy
   # TODO(me) - create a bool to see test against if we've already parsed
-  def numpyPlayersData(self):
-    self.getPBPFiles()
-    self.parsePlayerShots()
-    self.numpyPlayersByTeam()
+  def numpyPlayersData(self, debug = False):
+    if debug:
+      self.getTenPBPFiles()
+    else:
+      self.getPBPFiles()
+
+    # if we haven't parsed players, do it
+    if not self.players_parsed:
+      self.parsePlayerShots()
+      self.numpyPlayersByTeam()
+
     return self.playersByTeamNumpy
 
   # loads a list of all the play by play xml files
@@ -216,6 +235,9 @@ class playByPlayParser():
               # add the event to the units event list
               oUnit[1].append([category, player, totalTime, scoreDiff, value])
 
+      # note that we parsed the units
+      self.units_parsed = True
+
     except IOError as e:
       print "I/O error({0}): {1}".format(e.errno, e.strerror)
     except ET.ParseError as e:
@@ -283,6 +305,9 @@ class playByPlayParser():
                       playerData[1].append([periodCount, totalTime, shotType, 0, scoreDiff])
                     if (category ==  4):
                       playerData[1].append([periodCount, totalTime, 1, 0, scoreDiff])
+
+      # note that we parsed for players
+      self.players_parsed = True
 
     except IOError as e:
       print "I/O error({0}): {1}".format(e.errno, e.strerror)
