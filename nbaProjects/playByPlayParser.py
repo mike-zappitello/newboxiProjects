@@ -147,7 +147,7 @@ class playByPlayParser():
   def nickToCity(self, nickname):
     for team in self.teams:
       if nickname == team['nickname']:
-        city = team['location']
+        city = team['location'].upper()
 
     return city.upper()
 
@@ -193,6 +193,7 @@ class playByPlayParser():
 
           #parse through each possession
           for possession in period.iter('possession'):
+            firstEvent = True
             # get the team with the ball and their lineup
             team = possession.findtext('team')
             if team == homeCity:
@@ -203,7 +204,7 @@ class playByPlayParser():
               oUnit_str = possession.findtext('away-players')
             else:
               print 'team {0} neq to {1} or {2}'.format(team, homeCity, awayCity)
-              raise ET.ParseError(0, 'cutsom parse error')
+              raise ET.ParseError()
 
             # find the unit in the data array or add it
             oUnit = self.findOrAddUnit(oUnit_str, self.unitsByTeam[oTeam])
@@ -231,9 +232,16 @@ class playByPlayParser():
               value = event.findtext('shottype')
               if not value:
                 value = 0
+              else:
+                value = int(value)
+
+              init = 0
+              if firstEvent:
+                init = 1
 
               # add the event to the units event list
-              oUnit[1].append([category, player, totalTime, scoreDiff, value])
+              oUnit[1].append([category, player, init, totalTime, scoreDiff, value])
+              firstEvent = False
 
       # note that we parsed the units
       self.units_parsed = True

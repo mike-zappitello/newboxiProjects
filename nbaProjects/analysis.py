@@ -18,28 +18,77 @@ TODO
 '''
 
 class analyzer():
-  def __init__(self, debug = False):
+  def __init__(self, debug = True):
     self.parser = parser()
     self.debug = debug
+
+    # setup empty players by team dict
+    self.players_by_team = {}
+    for team in self.parser.teams:
+      players = team['roster']
+      self.players_by_team[team['nickname']] = []
+      for player in players:
+        playerName = player['first_name'] + ' ' + player['last_name']
+        self.players_by_team[team['nickname']].append([playerName, [], []])
 
   def unitAnalysis(self, method):
     units_by_team_data = self.parser.numpyUnitsData(self.debug)
     for team in self.parser.teams:
       units_data = units_by_team_data[team['nickname']]
+      players_data = self.players_by_team[team['nickname']]
       for unit in units_data:
-        method(unit)
+        method(unit, players_data)
 
   def playerAnalysis(self, method):
     players_by_team_data = self.parser.numpyPlayersData(self.debug)
     for team in self.parser.teams:
       players_data = players_by_team_data[team['nickname']]
       for player in players_data:
-        method(player)
+        method(player, self.parser.teams)
 
-def debugAnalysis(player_data):
+def debugAnalysis(player_data, team_data):
   print "data for player {0}".format(player_data[0])
 
-def firstHistogram(playerDataArray):
+def adjustedPlayerHistograms(unit_data, players_data):
+  bins = np.arange(-36, 37, 2)
+  try:
+    unit = unit_data[0]
+    events = unit_data[1]
+    initEvents = events[events[ : , 2] == 1]
+
+    print unit
+    # add score diffs to each players data
+    for player in unit:
+      for player_ in players_data:
+        if player == player_[0]:
+          for event in initEvents:
+            player_[1].append([event[3], event[4]])
+    '''
+    # draw histogram and label it
+    plt.hist(initEvents[ : , 4],
+             bins=bins,
+             rwidth=0.8)
+    title = "{0}_{1}_{2}_{3}_{4}".format(unit[0],
+                                         unit[1],
+                                         unit[2],
+                                         unit[3],
+                                         unit[4])
+    plt.title(title)
+    plt.xlim(bins[0], bins[-1])
+    plt.xlabel('Score Diff')
+    plt.ylabel('Possesions')
+
+    # save and clear the plot
+    saveLocation = (dataDir.k_histDir + title + ".png")
+    plt.savefig(saveLocation)
+    plt.clf()
+    '''
+
+  except IndexError  as e:
+    a = 0
+    # print "Index error on {0}".format(unit_data[1])
+
+def firstHistogram(playerDataArray, team_data):
   bins = np.arange(-36, 37, 2)
   for playerData in playerDataArray:
     if playerData[1].size == 0:
@@ -85,3 +134,6 @@ def firstHistogram(playerDataArray):
       plt.savefig(saveLocation)
       plt.clf()
 
+a = analyzer(True)
+a.unitAnalysis(adjustedPlayerHistograms)
+print a.players_by_team
