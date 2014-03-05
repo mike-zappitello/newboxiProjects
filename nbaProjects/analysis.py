@@ -1,5 +1,5 @@
 '''
-copyright mzappitello 2014
+opyright mzappitello 2014
 
 methods that take data in form of lists of numpy arrays and runs analysis on it.
 '''
@@ -26,10 +26,11 @@ class analyzer():
     self.players_by_team = {}
     for team in self.parser.teams:
       players = team['roster']
-      self.players_by_team[team['nickname']] = []
+      self.players_by_team[team['nickname']] = {}
       for player in players:
         playerName = player['first_name'] + ' ' + player['last_name']
-        self.players_by_team[team['nickname']].append([playerName, [], []])
+        self.players_by_team[team['nickname']][playerName] = [[], []]
+        # self.players_by_team[team['nickname']].append([playerName, [], []])
 
   def unitAnalysis(self, method):
     units_by_team_data = self.parser.numpyUnitsData(self.debug)
@@ -46,6 +47,9 @@ class analyzer():
       for player in players_data:
         method(player, self.parser.teams)
 
+  def adjustedPointsHistogram(self):
+    adjustedHistogrm(self.players_by_team)
+
 def debugAnalysis(player_data, team_data):
   print "data for player {0}".format(player_data[0])
 
@@ -56,13 +60,31 @@ def adjustedPlayerHistograms(unit_data, players_data):
     events = unit_data[1]
     initEvents = events[events[ : , 2] == 1]
 
-    print unit
     # add score diffs to each players data
     for player in unit:
-      for player_ in players_data:
-        if player == player_[0]:
-          for event in initEvents:
-            player_[1].append([event[3], event[4]])
+      try:
+        for event in initEvents:
+          players_data[player][0].append([event[3], event[4]])
+      except KeyError as e:
+        print "player {0} not on team :(".format(player)
+
+    # get all the made shots and add those to each players stats
+    free_throws_made = events[events[ : , 0] == 3]
+    shots_made = events[events[ : , 0] == 5]
+
+    for free_throw in free_throws_made:
+      try:
+        player = free_throw[1]
+        players_data[player][1].append([free_throw[4], free_throw[5]]) 
+      except KeyError as e:
+        print "plyaer {0} not on team :|".format(player)
+
+    for shot in shots_made:
+      try:
+        player = shot[1]
+        players_data[player][1].append([shot[4], shot[5]]) 
+      except KeyError as e:
+        print "plyaer {0} not on team :/".format(player)
     '''
     # draw histogram and label it
     plt.hist(initEvents[ : , 4],
@@ -85,8 +107,26 @@ def adjustedPlayerHistograms(unit_data, players_data):
     '''
 
   except IndexError  as e:
-    a = 0
-    # print "Index error on {0}".format(unit_data[1])
+    print "index error !!!"
+
+def adjustedHistogrm(players_dict):
+  bins = np.arange(-36, 37, 2)
+  teams = players_dict.keys()
+  for team in teams:
+    roster = players_dict[team].keys()
+    for player in roster:
+      on_court = np.array(players_dict[team][player][0])
+      shots = np.array(players_dict[team][player][1])
+
+      if shots.size == 0:
+        print "{0} has no shots".format(player)
+      else:
+        # sort into three data sets based on points scored
+        threes = shots[shots[ : , 1] == 3]
+        twos = shots[shots[ : , 1] == 2]
+        ones = shots[shots[ : , 1] == 1]
+
+        print "threes for {0}: \n{1}".format(player, threes)
 
 def firstHistogram(playerDataArray, team_data):
   bins = np.arange(-36, 37, 2)
@@ -136,4 +176,5 @@ def firstHistogram(playerDataArray, team_data):
 
 a = analyzer(True)
 a.unitAnalysis(adjustedPlayerHistograms)
-print a.players_by_team
+a.adjustedPointsHistogram()
+# print a.players_by_team
