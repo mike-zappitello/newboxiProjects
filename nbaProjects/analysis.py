@@ -126,7 +126,53 @@ def adjustedHistogrm(players_dict):
         twos = shots[shots[ : , 1] == 2]
         ones = shots[shots[ : , 1] == 1]
 
-        print "threes for {0}: \n{1}".format(player, threes)
+        # get the diffs for each shot type
+        threes_hist, unused = np.histogram(threes[ : , 0], bins)
+        twos_hist, unused = np.histogram(twos[ : , 0], bins)
+        ones_hist, unused = np.histogram(ones[ : , 0], bins)
+
+        # get info about how the point diffs per player
+        on_court_hist, unused = np.histogram(on_court, bins)
+        on_court_float = np.array(on_court_hist, dtype = np.float64)
+        total_possessions = np.sum(on_court_float)
+        on_court_adj = np.array(on_court_float / total_possessions, dtype = np.float64)
+
+        # adjust the histogram arrays with the on court adj * points scored
+        threes_adj = threes_hist * on_court_adj * 3
+        twos_adj = twos_hist * on_court_adj * 2
+        ones_adj = ones_hist * on_court_adj * 1
+
+        # draw the graph
+        width = 0.7 * (bins[1] - bins[0])
+        center = (bins[:-1] + bins[1:]) / 2
+        plt.bar(center,
+                threes_adj,
+                align = 'center',
+                width = width,
+                color = 'red')
+        plt.bar(center,
+                twos_adj,
+                align = 'center',
+                width = width,
+                color = 'green',
+                bottom = threes_adj)
+        plt.bar(center,
+                ones_adj,
+                align = 'center',
+                width = width,
+                color = 'blue',
+                bottom = threes_adj + twos_adj)
+
+        plt.title(player)
+        plt.xlim(bins[0], bins[-1])
+        plt.xlabel('Score Diff')
+        plt.ylabel('Points')
+
+        # save and clear the plot
+        playerName = player.replace(" ", "")
+        saveLocation = (dataDir.k_histDir + playerName + ".png")
+        plt.savefig(saveLocation)
+        plt.clf()
 
 def firstHistogram(playerDataArray, team_data):
   bins = np.arange(-36, 37, 2)
