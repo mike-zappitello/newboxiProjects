@@ -66,7 +66,7 @@ def adjustedPlayerHistograms(unit_data, players_data):
         for event in initEvents:
           players_data[player][0].append([event[3], event[4]])
       except KeyError as e:
-        print "player {0} not on team :(".format(player)
+        print "player {0} not on team :|".format(player)
 
     # get all the made shots and add those to each players stats
     free_throws_made = events[events[ : , 0] == 3]
@@ -84,27 +84,7 @@ def adjustedPlayerHistograms(unit_data, players_data):
         player = shot[1]
         players_data[player][1].append([shot[4], shot[5]]) 
       except KeyError as e:
-        print "plyaer {0} not on team :/".format(player)
-    '''
-    # draw histogram and label it
-    plt.hist(initEvents[ : , 4],
-             bins=bins,
-             rwidth=0.8)
-    title = "{0}_{1}_{2}_{3}_{4}".format(unit[0],
-                                         unit[1],
-                                         unit[2],
-                                         unit[3],
-                                         unit[4])
-    plt.title(title)
-    plt.xlim(bins[0], bins[-1])
-    plt.xlabel('Score Diff')
-    plt.ylabel('Possesions')
-
-    # save and clear the plot
-    saveLocation = (dataDir.k_histDir + title + ".png")
-    plt.savefig(saveLocation)
-    plt.clf()
-    '''
+        print "plyaer {0} not on team :|".format(player)
 
   except IndexError  as e:
     print "index error !!!"
@@ -121,6 +101,7 @@ def adjustedHistogrm(players_dict):
       if shots.size == 0:
         print "{0} has no shots".format(player)
       else:
+        print "generating hist for {0}".format(player)
         # sort into three data sets based on points scored
         threes = shots[shots[ : , 1] == 3]
         twos = shots[shots[ : , 1] == 2]
@@ -144,7 +125,7 @@ def adjustedHistogrm(players_dict):
 
         # draw the graph
         width = 0.7 * (bins[1] - bins[0])
-        center = (bins[:-1] + bins[1:]) / 2
+        center = (bins[:-1] + bins[1:])
         plt.bar(center,
                 threes_adj,
                 align = 'center',

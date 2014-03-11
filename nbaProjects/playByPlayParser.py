@@ -216,6 +216,8 @@ class playByPlayParser():
 
               # get the player
               player = event.findtext('player')
+              if not player:
+                player = ""
 
               # get the time and total time
               time = event.findtext('time')
@@ -329,7 +331,9 @@ class playByPlayParser():
     for team in self.teams:
       unitsData = self.unitsByTeam[team['nickname']]
       for unitData in unitsData:
-        self.unitsByTeamNumpy[team['nickname']].append([unitData[0], np.array(unitData[1])])
+        self.unitsByTeamNumpy[team['nickname']].append(
+          [unitData[0],
+          np.array(unitData[1], dtype=np.object)])
 
   # conver playersByTeam to use numpy arrays so we can fuck with them
   def numpyPlayersByTeam(self):
