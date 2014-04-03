@@ -83,6 +83,7 @@ def saveGames():
       gameFileString = dataDir.k_pbpDir + gameString
       if not isfile(gameFileString):
         print "saving game {0}".format(gameString)
+        print "url: {0}".format(gameUrl)
         gamePage = urllib2.urlopen(gameUrl)
         gameData = gamePage.read()
         gamePage.close()

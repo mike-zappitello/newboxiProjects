@@ -75,14 +75,14 @@ def adjustedPlayerHistograms(unit_data, players_data):
     for free_throw in free_throws_made:
       try:
         player = free_throw[1]
-        players_data[player][1].append([free_throw[4], free_throw[5]]) 
+        players_data[player][1].append([free_throw[4], free_throw[5]])
       except KeyError as e:
         print "plyaer {0} not on team :|".format(player)
 
     for shot in shots_made:
       try:
         player = shot[1]
-        players_data[player][1].append([shot[4], shot[5]]) 
+        players_data[player][1].append([shot[4], shot[5]])
       except KeyError as e:
         print "plyaer {0} not on team :|".format(player)
 
@@ -127,6 +127,12 @@ def adjustedHistogrm(players_dict):
         width = 0.7 * (bins[1] - bins[0])
         center = (bins[:-1] + bins[1:])
         plt.bar(center,
+                on_court_hist,
+                align = 'center',
+                width = width,
+                color = 'red')
+        '''
+        plt.bar(center,
                 threes_adj,
                 align = 'center',
                 width = width,
@@ -143,11 +149,12 @@ def adjustedHistogrm(players_dict):
                 width = width,
                 color = 'blue',
                 bottom = threes_adj + twos_adj)
+        '''
 
         plt.title(player)
         plt.xlim(bins[0], bins[-1])
         plt.xlabel('Score Diff')
-        plt.ylabel('Points')
+        plt.ylabel('Possessions')
 
         # save and clear the plot
         playerName = player.replace(" ", "")
@@ -201,7 +208,7 @@ def firstHistogram(playerDataArray, team_data):
       plt.savefig(saveLocation)
       plt.clf()
 
-a = analyzer(True)
+a = analyzer(False)
 a.unitAnalysis(adjustedPlayerHistograms)
 a.adjustedPointsHistogram()
 # print a.players_by_team
